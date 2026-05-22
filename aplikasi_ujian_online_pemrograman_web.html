@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Ujian Online Pemrograman Web</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom Scrollbar for better UX */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Print Stylesheet to generate neat PDF report */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-card {
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                border-radius: 0px !important;
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Top Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 no-print shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md shadow-brand-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 tracking-tight text-sm sm:text-base">Exam WebProg v1.0</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Ujian Kompetensi Pemrograman Web</p>
+                </div>
+            </div>
+            
+            <!-- Timer Display inside header, visible only when exam is active -->
+            <div id="header-timer-container" class="hidden items-center gap-3">
+                <div class="flex items-center gap-2 bg-rose-50 border border-rose-100 px-3.5 py-1.5 rounded-full text-rose-700 font-semibold text-sm transition-all animate-pulse">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="countdown-timer">60:00</span>
+                </div>
+                <button onclick="confirmSubmitExam()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-emerald-100 flex items-center gap-1.5">
+                    <span>Selesai</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow flex flex-col">
+
+        <!-- SCREEN 1: Welcome & Registration Form -->
+        <section id="screen-auth" class="flex-grow flex items-center justify-center p-4">
+            <div class="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 p-8 relative overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <!-- Visual Accent -->
+                <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600"></div>
+                
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Portal Ujian Online</h2>
+                    <p class="text-slate-500 mt-2 text-sm">Silakan masukkan identitas lengkap Anda untuk memulai ujian Pemrograman Web.</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2" for="user-nim">NIM (Nomor Induk Mahasiswa)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                </svg>
+                            </span>
+                            <input type="text" id="user-nim" class="pl-10 w-full rounded-2xl border-2 border-slate-200 focus:border-brand-500 focus:ring-0 px-4 py-3 text-slate-900 font-medium placeholder-slate-400 transition-all text-sm outline-none" placeholder="Contoh: 220913982">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2" for="user-nama">Nama Lengkap</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </span>
+                            <input type="text" id="user-nama" class="pl-10 w-full rounded-2xl border-2 border-slate-200 focus:border-brand-500 focus:ring-0 px-4 py-3 text-slate-900 font-medium placeholder-slate-400 transition-all text-sm outline-none" placeholder="Contoh: John Doe">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2" for="user-kelas">Kelas</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </span>
+                            <input type="text" id="user-kelas" class="pl-10 w-full rounded-2xl border-2 border-slate-200 focus:border-brand-500 focus:ring-0 px-4 py-3 text-slate-900 font-medium placeholder-slate-400 transition-all text-sm outline-none" placeholder="Contoh: IF-4A">
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 rounded-2xl border border-amber-200 p-4 mt-2">
+                        <div class="flex gap-3">
+                            <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <h4 class="text-xs font-bold text-amber-800">Informasi Penting</h4>
+                                <ul class="list-disc text-[11px] text-amber-700 pl-4 mt-1 space-y-0.5">
+                                    <li>Ujian terdiri dari <strong>50 Soal Pilihan Ganda</strong>.</li>
+                                    <li>Alokasi waktu pengerjaan adalah <strong>60 menit</strong>.</li>
+                                    <li>State pengerjaan akan disimpan otomatis pada browser Anda.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="auth-error-message" class="hidden text-rose-600 text-xs font-semibold text-center py-1">
+                        Mohon lengkapi semua data sebelum memulai ujian!
+                    </div>
+
+                    <button onclick="startExam()" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-brand-200 transition-all flex items-center justify-center gap-2 group text-sm">
+                        <span>Mulai Ujian Sekarang</span>
+                        <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: Active Exam Screen -->
+        <section id="screen-exam" class="hidden flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+            
+            <!-- Left Panel: Questions, code blocks, navigation inside question cards -->
+            <div class="flex-grow flex flex-col gap-6 lg:w-3/4">
+                
+                <!-- Student Info Banner -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+                    <div class="flex flex-wrap gap-4 text-xs sm:text-sm text-slate-600 font-medium">
+                        <div>
+                            <span class="text-slate-400">Nama:</span> <strong class="text-slate-800" id="info-display-nama">-</strong>
+                        </div>
+                        <div class="hidden sm:block text-slate-300">|</div>
+                        <div>
+                            <span class="text-slate-400">NIM:</span> <strong class="text-slate-800 font-mono" id="info-display-nim">-</strong>
+                        </div>
+                        <div class="hidden sm:block text-slate-300">|</div>
+                        <div>
+                            <span class="text-slate-400">Kelas:</span> <strong class="text-slate-800" id="info-display-kelas">-</strong>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Auto-Save Aktif
+                    </div>
+                </div>
+
+                <!-- Main Question Sheet Box -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 flex-grow flex flex-col relative overflow-hidden">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                        <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-full uppercase tracking-wider">Soal ke-<span id="display-question-number">1</span> Dari 50</span>
+                        <button onclick="toggleFlag()" id="btn-flag-status" class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-600 transition-all text-slate-500">
+                            <svg class="w-4 h-4 text-slate-400" id="flag-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a0.5.5 0 01.5-.5h2a.5.5 0 01.5.5v12a0.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5V5zm0 0c3-1 6-1 9 0s6 1 9 0v9c-3 1-6 1-9 0s-6-1-9 0z" />
+                            </svg>
+                            <span id="flag-text">Tandai Ragu-ragu</span>
+                        </button>
+                    </div>
+
+                    <!-- Question Text -->
+                    <div class="text-base sm:text-lg font-semibold text-slate-900 mb-6 leading-relaxed" id="question-text">
+                        Loading question...
+                    </div>
+
+                    <!-- Options Grid (Pilihan Ganda A, B, C, D) -->
+                    <div class="space-y-3 flex-grow" id="options-container">
+                        <!-- Options injected via JavaScript -->
+                    </div>
+
+                    <!-- Bottom Nav Controls for Question cards -->
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-6 mt-8">
+                        <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100 transition-all flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            <span>Kembali</span>
+                        </button>
+
+                        <button onclick="nextQuestion()" id="btn-next" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-bold text-sm hover:bg-brand-700 active:bg-brand-800 transition-all flex items-center gap-1 shadow-md shadow-brand-100">
+                            <span>Lanjut</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Sidebar navigation grid, timer display, and direct submission -->
+            <div class="w-full lg:w-1/4 shrink-0 flex flex-col gap-6">
+                <!-- Grid of Soal Navigation Box -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col">
+                    <h3 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-1.5">
+                        <svg class="w-4.5 h-4.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        Navigasi Soal
+                    </h3>
+                    
+                    <!-- Navigation Legends -->
+                    <div class="flex flex-wrap gap-x-3 gap-y-1.5 mb-4 pb-4 border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-slate-200 border border-slate-300"></span>
+                            <span>Belum</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-brand-600"></span>
+                            <span>Aktif</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                            <span>Sudah</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+                            <span>Ragu</span>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Grid Wrapper for 50 Question Buttons -->
+                    <div class="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-5 gap-2 max-h-[340px] overflow-y-auto pr-1" id="nav-buttons-grid">
+                        <!-- Navigation Grid generated by JS dynamically -->
+                    </div>
+
+                    <!-- Final Submit Button bottom of sidebar -->
+                    <div class="mt-6 border-t border-slate-100 pt-5">
+                        <button onclick="confirmSubmitExam()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl shadow-lg shadow-emerald-100 text-sm transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Selesaikan Ujian</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Exam Summary / Final Results Page -->
+        <section id="screen-result" class="hidden flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+            
+            <!-- Result Summary Card -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10 relative overflow-hidden print-card">
+                <div class="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 no-print"></div>
+                
+                <div class="text-center pb-8 border-b border-slate-100 mb-8">
+                    <span id="result-badge-pass" class="hidden text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-full uppercase tracking-wider mb-4 inline-block">Kelulusan: Lulus Kompetensi</span>
+                    <span id="result-badge-fail" class="hidden text-xs font-bold text-rose-700 bg-rose-50 px-4 py-2 rounded-full uppercase tracking-wider mb-4 inline-block">Kelulusan: Belum Lulus</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Hasil Penilaian Ujian</h2>
+                    <p class="text-slate-500 mt-2 text-sm no-print">Laporan komparatif penguasaan materi pemrograman web Anda.</p>
+                </div>
+
+                <!-- Bio & Score Split Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <!-- Bio Info Details -->
+                    <div class="md:col-span-7 space-y-4">
+                        <h3 class="text-lg font-bold text-slate-800 border-b pb-2">Identitas Peserta</h3>
+                        <div class="grid grid-cols-3 gap-y-3 text-sm">
+                            <span class="text-slate-500 font-medium">NIM</span>
+                            <span class="col-span-2 font-mono font-bold text-slate-900" id="res-display-nim">-</span>
+                            
+                            <span class="text-slate-500 font-medium">Nama</span>
+                            <span class="col-span-2 font-bold text-slate-900" id="res-display-nama">-</span>
+                            
+                            <span class="text-slate-500 font-medium">Kelas</span>
+                            <span class="col-span-2 font-bold text-slate-900" id="res-display-kelas">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Score Display -->
+                    <div class="md:col-span-5 flex flex-col items-center justify-center p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-1">Skor Akhir</span>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-6xl sm:text-7xl font-black text-slate-900" id="res-display-score">0</span>
+                            <span class="text-lg font-bold text-slate-400">/ 100</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3 font-medium">Nilai batas kelulusan minimum: 70</p>
+                    </div>
+                </div>
+
+                <!-- Diagnostic Analytics Matrix -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
+                        <span class="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Benar</span>
+                        <span class="text-2xl font-extrabold text-emerald-800" id="res-stat-correct">0</span>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-center">
+                        <span class="block text-xs font-bold text-rose-600 uppercase tracking-wider mb-1">Salah</span>
+                        <span class="text-2xl font-extrabold text-rose-800" id="res-stat-incorrect">0</span>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-center">
+                        <span class="block text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Kosong</span>
+                        <span class="text-2xl font-extrabold text-amber-800" id="res-stat-unanswered">0</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
+                        <span class="block text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Akurasi</span>
+                        <span class="text-2xl font-extrabold text-blue-800" id="res-stat-accuracy">0%</span>
+                    </div>
+                </div>
+
+                <!-- Print & Reset Buttons -->
+                <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-end no-print">
+                    <button onclick="window.print()" class="px-5 py-3 bg-slate-800 hover:bg-slate-950 text-white font-bold rounded-2xl text-sm transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span>Cetak / Simpan PDF</span>
+                    </button>
+                    <button onclick="resetExamState()" class="px-5 py-3 border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-2xl text-sm transition-all flex items-center justify-center gap-2">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 15H19" />
+                        </svg>
+                        <span>Mulai Ujian Ulang</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detailed Question Sheet Review -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 no-print">
+                <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 border-b pb-4">
+                    <svg class="w-5.5 h-5.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Lembar Tinjauan Pembahasan Soal
+                </h3>
+                
+                <!-- Filters for reviewing questions -->
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-1 text-xs">
+                    <button onclick="filterReview('all')" id="btn-filter-all" class="px-4 py-2 rounded-full font-bold bg-slate-900 text-white transition-all">Semua Soal (50)</button>
+                    <button onclick="filterReview('correct')" id="btn-filter-correct" class="px-4 py-2 rounded-full font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">Benar (<span id="rev-filter-count-correct">0</span>)</button>
+                    <button onclick="filterReview('incorrect')" id="btn-filter-incorrect" class="px-4 py-2 rounded-full font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">Salah (<span id="rev-filter-count-incorrect">0</span>)</button>
+                    <button onclick="filterReview('unanswered')" id="btn-filter-unanswered" class="px-4 py-2 rounded-full font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all">Kosong (<span id="rev-filter-count-unanswered">0</span>)</button>
+                </div>
+
+                <!-- Review list container -->
+                <div id="review-list-container" class="space-y-6">
+                    <!-- Dynamic review sheets will inject here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Confirmation Modal (DO NOT USE ALERT() or CONFIRM()!) -->
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform scale-95 opacity-0 transition-all duration-300" id="modal-content">
+            <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-bold text-slate-950 text-center mb-2" id="modal-title">Selesaikan Ujian?</h3>
+            <p class="text-slate-500 text-sm text-center mb-6 leading-relaxed" id="modal-description">Apakah Anda yakin ingin menyelesaikan ujian? Anda tidak dapat mengubah jawaban setelah menekan tombol konfirmasi.</p>
+            
+            <div id="modal-unanswered-warning" class="hidden mb-6 bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-xl text-xs text-center font-semibold">
+                Peringatan: Ada <span id="modal-unanswered-count">0</span> soal yang belum terjawab!
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-2xl font-bold text-sm transition-all">Batal</button>
+                <button onclick="submitExam()" class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-100">Ya, Selesaikan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Timeout Modal -->
+    <div id="timeout-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-bold text-slate-950 mb-2">Waktu Ujian Habis!</h3>
+            <p class="text-slate-500 text-sm mb-6 leading-relaxed">Waktu pengerjaan Anda telah berakhir. Sistem secara otomatis menyimpan dan mengirimkan hasil jawaban Anda.</p>
+            
+            <button onclick="closeTimeoutModalAndSubmit()" class="w-full py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl font-bold text-sm transition-all">Lihat Hasil Penilaian</button>
+        </div>
+    </div>
+
+    <!-- Custom Informational Toast Notification system -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span id="toast-message">State tersimpan otomatis</span>
+    </div>
+
+    <!-- Footer Area -->
+    <footer class="bg-white border-t border-slate-100 py-6 text-center text-xs text-slate-400 mt-auto no-print">
+        &copy; 2026 Aplikasi Ujian Online Pemrograman Web - All Rights Reserved.
+    </footer>
+
+    <script>
+        // Comprehensive database of 50 high-quality Web Programming Questions
+        const questions = [
+            {
+                id: 1,
+                question: "Manakah tag HTML5 yang digunakan untuk mendefinisikan bagian kepala dokumen atau bagian navigasi di bagian atas?",
+                options: ["&lt;head&gt;", "&lt;header&gt;", "&lt;nav-bar&gt;", "&lt;top&gt;"],
+                correct: 1
+            },
+            {
+                id: 2,
+                question: "Atribut mana yang digunakan dalam HTML untuk membuat link terbuka di tab/jendela baru?",
+                options: ["target=\"_blank\"", "target=\"_new\"", "target=\"new_tab\"", "href=\"_blank\""],
+                correct: 0
+            },
+            {
+                id: 3,
+                question: "Tag HTML mana yang digunakan untuk memasukkan baris baru secara langsung (line break)?",
+                options: ["&lt;break&gt;", "&lt;lb&gt;", "&lt;br&gt;", "&lt;newline&gt;"],
+                correct: 2
+            },
+            {
+                id: 4,
+                question: "Bagaimanakah tag HTML yang benar untuk menyisipkan file gambar (image)?",
+                options: ["&lt;img href=\"foto.jpg\" alt=\"foto\"&gt;", "&lt;img src=\"foto.jpg\" alt=\"foto\"&gt;", "&lt;image src=\"foto.jpg\"&gt;", "&lt;picture href=\"foto.jpg\"&gt;"],
+                correct: 1
+            },
+            {
+                id: 5,
+                question: "Tag HTML yang tepat untuk membuat sebuah daftar list yang terurut (ordered list seperti 1, 2, 3) adalah...",
+                options: ["&lt;ul&gt;", "&lt;li&gt;", "&lt;list&gt;", "&lt;ol&gt;"],
+                correct: 3
+            },
+            {
+                id: 6,
+                question: "Atribut mana yang digunakan untuk mendefinisikan teks alternatif bagi file gambar jika gambar gagal dimuat?",
+                options: ["title", "description", "alt", "caption"],
+                correct: 2
+            },
+            {
+                id: 7,
+                question: "Manakah format tipe input HTML5 yang digunakan untuk memvalidasi alamat email secara otomatis?",
+                options: ["&lt;input type=\"text\" name=\"email\"&gt;", "&lt;input type=\"mail\"&gt;", "&lt;input type=\"address\"&gt;", "&lt;input type=\"email\"&gt;"],
+                correct: 3
+            },
+            {
+                id: 8,
+                question: "Tag HTML mana yang direkomendasikan untuk menyisipkan file audio internal tanpa plugin tambahan di HTML5?",
+                options: ["&lt;audio&gt;", "&lt;sound&gt;", "&lt;music&gt;", "&lt;embed&gt;"],
+                correct: 0
+            },
+            {
+                id: 9,
+                question: "Di dalam elemen form HTML, tipe input mana yang digunakan untuk memberikan opsi pilihan tunggal dari beberapa pilihan yang ada (mutually exclusive)?",
+                options: ["checkbox", "radio", "select-box", "text-toggle"],
+                correct: 1
+            },
+            {
+                id: 10,
+                question: "Tag mana yang digunakan untuk membuat judul utama atau judul terbesar pada dokumen HTML?",
+                options: ["&lt;head&gt;", "&lt;h6&gt;", "&lt;h1&gt;", "&lt;heading&gt;"],
+                correct: 2
+            },
+            {
+                id: 11,
+                question: "Apakah kepanjangan resmi dari CSS dalam pengembangan web?",
+                options: ["Creative Style Sheets", "Computer Style Sheets", "Cascading Style Sheets", "Colorful Style Sheets"],
+                correct: 2
+            },
+            {
+                id: 12,
+                question: "Bagaimanakah sintaks CSS yang benar untuk merujuk elemen HTML yang memiliki atribut id bernilai 'header'?",
+                options: [".header", "#header", "header", "*header"],
+                correct: 1
+            },
+            {
+                id: 13,
+                question: "Sifat CSS (properti) manakah yang digunakan untuk merubah warna latar belakang sebuah elemen?",
+                options: ["color", "bg-color", "background-color", "bgcolor"],
+                correct: 2
+            },
+            {
+                id: 14,
+                question: "Properti CSS mana yang digunakan untuk mengatur ketebalan teks (misalnya tebal/bold)?",
+                options: ["font-style", "font-weight", "text-transform", "font-variant"],
+                correct: 1
+            },
+            {
+                id: 15,
+                question: "Bagaimanakah cara membuat teks menjadi huruf kapital semua (UPPERCASE) menggunakan stylesheet CSS?",
+                options: ["text-transform: uppercase", "font-case: capital", "text-style: uppercase", "transform: capitalization"],
+                correct: 0
+            },
+            {
+                id: 16,
+                question: "Berdasarkan prinsip Box Model pada CSS, komponen manakah yang menempati posisi paling luar dari seluruh elemen box tersebut?",
+                options: ["padding", "border", "content", "margin"],
+                correct: 3
+            },
+            {
+                id: 17,
+                question: "Nilai properti CSS `display` manakah yang mengubah elemen menjadi box fleksibel satu dimensi (baris atau kolom)?",
+                options: ["grid", "flex", "block", "inline-block"],
+                correct: 1
+            },
+            {
+                id: 18,
+                question: "Properti CSS mana yang digunakan untuk menentukan jarak renggang spasi vertikal antar baris teks?",
+                options: ["letter-spacing", "word-spacing", "line-height", "text-indent"],
+                correct: 2
+            },
+            {
+                id: 19,
+                question: "Manakah cara yang benar di bawah ini untuk menghubungkan stylesheet eksternal CSS ke dalam dokumen HTML?",
+                options: ["&lt;link rel=\"stylesheet\" href=\"styles.css\"&gt;", "&lt;style src=\"styles.css\"&gt;", "&lt;css href=\"styles.css\"&gt;", "&lt;stylesheet&gt;styles.css&lt;/stylesheet&gt;"],
+                correct: 0
+            },
+            {
+                id: 20,
+                question: "Nilai properti `position` CSS manakah yang membuat elemen tetap diam/menempel pada layar meskipun halaman di-scroll ke bawah?",
+                options: ["static", "relative", "fixed", "absolute"],
+                correct: 2
+            },
+            {
+                id: 21,
+                question: "Manakah kata kunci (keyword) modern dalam JavaScript ES6 yang digunakan untuk mendeklarasikan variabel yang nilainya dapat diubah kembali?",
+                options: ["var", "let", "const", "def"],
+                correct: 1
+            },
+            {
+                id: 22,
+                question: "Fungsi bawaan (built-in) JavaScript manakah yang digunakan untuk memunculkan atau menuliskan teks ke dalam konsol browser?",
+                options: ["document.write()", "print()", "console.log()", "window.alert()"],
+                correct: 2
+            },
+            {
+                id: 23,
+                question: "Operator perbandingan JavaScript manakah yang digunakan untuk mencocokkan nilai sekaligus tipe data secara presisi (strict equality)?",
+                options: ["==", "=", "===", "!="],
+                correct: 2
+            },
+            {
+                id: 24,
+                question: "Nama event JavaScript yang dipicu ketika pengguna menekan mouse kiri pada elemen tombol HTML adalah...",
+                options: ["onhover", "click", "mouseenter", "submit"],
+                correct: 1
+            },
+            {
+                id: 25,
+                question: "Metode Array bawaan JavaScript mana yang digunakan untuk menambahkan elemen baru ke bagian akhir dari sebuah array?",
+                options: ["pop()", "shift()", "unshift()", "push()"],
+                correct: 3
+            },
+            {
+                id: 26,
+                question: "Tipe data primitif JavaScript manakah yang hanya menyimpan dua nilai eksklusif, yaitu true atau false?",
+                options: ["number", "string", "boolean", "undefined"],
+                correct: 2
+            },
+            {
+                id: 27,
+                question: "Fungsi bawaan JavaScript manakah yang digunakan untuk mengonversi sebuah string angka menjadi tipe data bilangan bulat (integer)?",
+                options: ["parseInt()", "parseFloat()", "Number.toString()", "toInteger()"],
+                correct: 0
+            },
+            {
+                id: 28,
+                question: "Manakah teknologi library atau framework JavaScript populer di bawah ini yang dikembangkan oleh Meta (Facebook) untuk membangun interaktif UI?",
+                options: ["Angular", "React", "Vue", "Laravel"],
+                correct: 1
+            },
+            {
+                id: 29,
+                question: "Bagaimanakah penulisan fungsi panah (arrow function) yang benar di JavaScript ES6?",
+                options: ["const myFunc = function() => {}", "const myFunc = () => {}", "function myFunc() => {}", "const myFunc => {}"],
+                correct: 1
+            },
+            {
+                id: 30,
+                question: "Metode document selection mana yang digunakan untuk mengambil semua elemen HTML yang memiliki class name tertentu sekaligus?",
+                options: ["document.getElementById()", "document.getElementsByTagName()", "document.querySelectorAll()", "document.getElementByClass()"],
+                correct: 2
+            },
+            {
+                id: 31,
+                question: "Dengan cara apakah sintaks PHP (hypertext preprocessor) harus selalu dimulai di dalam dokumen file web?",
+                options: ["&lt;script php&gt;", "&lt;?php", "&lt;?", "&lt;%php"],
+                correct: 1
+            },
+            {
+                id: 32,
+                question: "Karakter/Simbol manakah yang wajib digunakan di awal setiap deklarasi variabel di bahasa pemrograman PHP?",
+                options: ["#", "$", "@", "&amp;"],
+                correct: 1
+            },
+            {
+                id: 33,
+                question: "Instruksi PHP manakah yang paling sering digunakan untuk mencetak teks atau hasil kalkulasi data ke layar output browser?",
+                options: ["print_out", "echo", "console.print", "response.write"],
+                correct: 1
+            },
+            {
+                id: 34,
+                question: "Di dalam pemrosesan form, metode HTTP mana yang mengirimkan data form secara tersembunyi (tidak ditampilkan di URL)?",
+                options: ["GET", "POST", "REQUEST", "FETCH"],
+                correct: 1
+            },
+            {
+                id: 35,
+                question: "Fungsi PHP bawaan mana yang digunakan untuk menyambungkan koneksi script ke server database MySQL?",
+                options: ["mysqli_connect()", "mysql_db_connect()", "sql_connect()", "db_connect()"],
+                correct: 0
+            },
+            {
+                id: 36,
+                question: "Operator mana yang digunakan dalam PHP untuk menggabungkan (concatenation) dua buah string menjadi satu?",
+                options: ["+", ".", "&amp;", "concat()"],
+                correct: 1
+            },
+            {
+                id: 37,
+                question: "Variabel superglobal PHP manakah yang digunakan untuk menangkap data form yang dikirim lewat metode GET (melalui query parameter URL)?",
+                options: ["$_POST", "$_REQUEST", "$_GET", "$_URL"],
+                correct: 2
+            },
+            {
+                id: 38,
+                question: "Sintaks PHP manakah yang wajib dijalankan pertama kali sebelum kita menyimpan atau membaca session variable?",
+                options: ["session_start()", "session_init()", "start_session()", "session_register()"],
+                correct: 0
+            },
+            {
+                id: 39,
+                question: "Karakter penutup manakah yang wajib digunakan di akhir setiap baris pernyataan/perintah tunggal dalam kode PHP?",
+                options: [". (titik)", "; (titik koma)", ", (koma)", ": (titik dua)"],
+                correct: 1
+            },
+            {
+                id: 40,
+                question: "Jenis array PHP manakah yang menggunakan kunci indeks berupa nama teks/string yang didefinisikan secara khusus, bukan nomor angka berurut?",
+                options: ["Indexed Array", "Multidimensional Array", "Associative Array", "Object-oriented Array"],
+                correct: 2
+            },
+            {
+                id: 41,
+                question: "Apakah kepanjangan yang benar dari protokol HTTP dalam jaringan komputer?",
+                options: ["Hypertext Transfer Protocol", "Hyper Transfer Text Protocol", "Hyperlink Text Transmission Protocol", "High Transfer Tech Protocol"],
+                correct: 0
+            },
+            {
+                id: 42,
+                question: "Kode status (status code) respons HTTP manakah yang berarti berkas/halaman yang diminta tidak ditemukan (Not Found)?",
+                options: ["200", "500", "403", "404"],
+                correct: 3
+            },
+            {
+                id: 43,
+                question: "Kode status respons HTTP manakah yang mengindikasikan bahwa permintaan berhasil diproses secara sukses (OK)?",
+                options: ["200", "201", "302", "400"],
+                correct: 0
+            },
+            {
+                id: 44,
+                question: "Format penulisan data ringan berbasis teks yang sering digunakan untuk pertukaran data (data interchange) antara web server dan client API adalah...",
+                options: ["XML", "JSON", "HTML", "YAML"],
+                correct: 1
+            },
+            {
+                id: 45,
+                question: "Apakah kepanjangan resmi dari istilah DOM dalam JavaScript pengolahan web?",
+                options: ["Document Object Model", "Data Object Management", "Document Oriented Machine", "Database Optimization Mode"],
+                correct: 0
+            },
+            {
+                id: 46,
+                question: "Protokol aman versi terenkripsi dari HTTP yang menggunakan SSL/TLS untuk keamanan transmisi data adalah...",
+                options: ["HTTPX", "HTTP2", "HTTPS", "FTP"],
+                correct: 2
+            },
+            {
+                id: 47,
+                question: "Sebutan bagi pengembang yang memiliki kemampuan untuk menangani pemrograman di sisi client (frontend) sekaligus server (backend) adalah...",
+                options: ["Multi-system Developer", "Fullstack Developer", "Double-end Developer", "Architect Web Developer"],
+                correct: 1
+            },
+            {
+                id: 48,
+                question: "Sistem manajemen database relasional (RDBMS) open-source yang sangat populer dan sering dipaketkan dengan PHP dalam bundel XAMPP adalah...",
+                options: ["MongoDB", "MySQL", "Redis", "Oracle NoSQL"],
+                correct: 1
+            },
+            {
+                id: 49,
+                question: "Perintah/Sintaks SQL (Structured Query Language) mana yang digunakan untuk mengambil atau membaca baris data dari database?",
+                options: ["GET", "READ", "SELECT", "FETCH"],
+                correct: 2
+            },
+            {
+                id: 50,
+                question: "Secara default, port jaringan (network port) standar manakah yang digunakan untuk mengalirkan lalu lintas data protokol HTTP tidak aman?",
+                options: ["21", "443", "80", "8080"],
+                correct: 2
+            }
+        ];
+
+        // Application State Management
+        let state = {
+            userInfo: { nama: '', nim: '', kelas: '' },
+            started: false,
+            submitted: false,
+            answers: {},      // Format: { [questionId]: optionIndex }
+            flagged: {},      // Format: { [questionId]: boolean }
+            timeLeft: 3600,   // Default: 60 minutes in seconds (3600 seconds)
+            currentQuestionIndex: 0
+        };
+
+        const LOCAL_STORAGE_KEY = 'web_exam_autosave_v1';
+        let timerInterval = null;
+
+        // On window load: check for autosave state
+        window.onload = function() {
+            loadSavedState();
+        };
+
+        // Load saved state from LocalStorage
+        function loadSavedState() {
+            const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    
+                    // Restore state variables
+                    state = parsed;
+                    
+                    if (state.started && !state.submitted) {
+                        // User was mid-exam, resume automatically
+                        showScreen('screen-exam');
+                        updateTimerUI();
+                        document.getElementById('header-timer-container').classList.remove('hidden');
+                        document.getElementById('header-timer-container').classList.add('flex');
+                        
+                        // Set display bio info
+                        document.getElementById('info-display-nama').innerText = state.userInfo.nama;
+                        document.getElementById('info-display-nim').innerText = state.userInfo.nim;
+                        document.getElementById('info-display-kelas').innerText = state.userInfo.kelas;
+                        
+                        // Build sidebar navigations and load the saved current index question
+                        buildNavigationGrid();
+                        loadQuestion(state.currentQuestionIndex);
+                        startTimer();
+                        showToast("Melanjutkan sesi ujian yang tersimpan...");
+                    } else if (state.submitted) {
+                        // User had finished the exam, show results directly
+                        showScreen('screen-result');
+                        renderResults();
+                    }
+                } catch (e) {
+                    console.error("Gagal memulihkan state tersimpan:", e);
+                }
+            }
+        }
+
+        // Save current state to LocalStorage
+        function saveState() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+        }
+
+        // Toast feedback notifier
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Navigate between screens helper
+        function showScreen(screenId) {
+            document.getElementById('screen-auth').classList.add('hidden');
+            document.getElementById('screen-exam').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Validation & Registration trigger
+        function startExam() {
+            const nimInput = document.getElementById('user-nim').value.trim();
+            const namaInput = document.getElementById('user-nama').value.trim();
+            const kelasInput = document.getElementById('user-kelas').value.trim();
+            const errorElement = document.getElementById('auth-error-message');
+
+            if (!nimInput || !namaInput || !kelasInput) {
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            
+            errorElement.classList.add('hidden');
+
+            // Save user info
+            state.userInfo = {
+                nama: namaInput,
+                nim: nimInput,
+                kelas: kelasInput
+            };
+            state.started = true;
+            state.submitted = false;
+            state.timeLeft = 3600; // Reset to 60 minutes
+            state.answers = {};
+            state.flagged = {};
+            state.currentQuestionIndex = 0;
+
+            saveState();
+
+            // Setup Top banner info
+            document.getElementById('info-display-nama').innerText = state.userInfo.nama;
+            document.getElementById('info-display-nim').innerText = state.userInfo.nim;
+            document.getElementById('info-display-kelas').innerText = state.userInfo.kelas;
+
+            // Transition screens
+            showScreen('screen-exam');
+            document.getElementById('header-timer-container').classList.remove('hidden');
+            document.getElementById('header-timer-container').classList.add('flex');
+
+            // Build exam dashboard
+            buildNavigationGrid();
+            loadQuestion(0);
+            startTimer();
+            showToast("Ujian dimulai! Semoga sukses.");
+        }
+
+        // Timer controller logic
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                if (state.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    triggerTimeout();
+                } else {
+                    state.timeLeft--;
+                    updateTimerUI();
+                    
+                    // Autosave state every 10 seconds to optimize storage writes
+                    if (state.timeLeft % 10 === 0) {
+                        saveState();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const minutes = Math.floor(state.timeLeft / 60);
+            const seconds = state.timeLeft % 60;
+            const timerStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('countdown-timer').innerText = timerStr;
+        }
+
+        function triggerTimeout() {
+            document.getElementById('timeout-modal').classList.remove('hidden');
+            document.getElementById('timeout-modal').classList.add('flex');
+        }
+
+        function closeTimeoutModalAndSubmit() {
+            document.getElementById('timeout-modal').classList.add('hidden');
+            document.getElementById('timeout-modal').classList.remove('flex');
+            submitExam();
+        }
+
+        // Load Question UI content by index
+        function loadQuestion(index) {
+            state.currentQuestionIndex = index;
+            saveState();
+
+            const questionObj = questions[index];
+            
+            // Render number indicator
+            document.getElementById('display-question-number').innerText = index + 1;
+            
+            // Render text
+            document.getElementById('question-text').innerHTML = questionObj.question;
+
+            // Build option items list
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const alphabet = ['A', 'B', 'C', 'D'];
+            const savedAnswerIndex = state.answers[questionObj.id];
+
+            questionObj.options.forEach((optText, optIdx) => {
+                const isSelected = savedAnswerIndex === optIdx;
+                
+                const optionCard = document.createElement('div');
+                optionCard.className = `group flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+                    isSelected 
+                    ? 'border-brand-600 bg-brand-50/50 shadow-md shadow-brand-50' 
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`;
+                optionCard.setAttribute('onclick', `selectOption(${questionObj.id}, ${optIdx})`);
+
+                // Circle badge for A, B, C, D
+                const badge = document.createElement('span');
+                badge.className = `w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 transition-all ${
+                    isSelected
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                }`;
+                badge.innerText = alphabet[optIdx];
+
+                // Option Content Text
+                const text = document.createElement('span');
+                text.className = `text-sm font-semibold transition-all ${
+                    isSelected ? 'text-brand-900' : 'text-slate-700'
+                }`;
+                text.innerHTML = optText;
+
+                optionCard.appendChild(badge);
+                optionCard.appendChild(text);
+                optionsContainer.appendChild(optionCard);
+            });
+
+            // Handle Flag/Ragu-ragu visual state
+            const isFlagged = state.flagged[questionObj.id] === true;
+            const flagBtn = document.getElementById('btn-flag-status');
+            const flagSvg = document.getElementById('flag-svg');
+            const flagText = document.getElementById('flag-text');
+
+            if (isFlagged) {
+                flagBtn.className = "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-500 bg-amber-500 text-white transition-all";
+                flagSvg.setAttribute('fill', 'currentColor');
+                flagSvg.className.baseVal = "w-4 h-4 text-white";
+                flagText.innerText = "Ditandai Ragu-ragu";
+            } else {
+                flagBtn.className = "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-slate-200 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-600 transition-all text-slate-500";
+                flagSvg.setAttribute('fill', 'none');
+                flagSvg.className.baseVal = "w-4 h-4 text-slate-400";
+                flagText.innerText = "Tandai Ragu-ragu";
+            }
+
+            // Adjust navigation Prev/Next buttons disabling
+            document.getElementById('btn-prev').disabled = index === 0;
+            document.getElementById('btn-prev').className = index === 0 
+                ? "px-5 py-2.5 rounded-xl border-2 border-slate-100 text-slate-300 font-bold text-sm cursor-not-allowed flex items-center gap-1"
+                : "px-5 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100 transition-all flex items-center gap-1";
+
+            const nextSpan = document.getElementById('btn-next').querySelector('span');
+            if (index === questions.length - 1) {
+                nextSpan.innerText = "Selesai";
+            } else {
+                nextSpan.innerText = "Lanjut";
+            }
+
+            // Update current active status inside navigation sidebar
+            updateActiveNavigationHighlight(index);
+        }
+
+        // Selected option controller
+        function selectOption(questionId, optIdx) {
+            state.answers[questionId] = optIdx;
+            
+            // If answer was marked flagged/ragu-ragu, keep it but showing saved
+            saveState();
+            
+            // Re-render only options panel to avoid fully reload jumps
+            loadQuestion(state.currentQuestionIndex);
+            
+            // Update sidebar button indicator live
+            updateNavigationGridButton(state.currentQuestionIndex);
+        }
+
+        // Toggle question flag review (Ragu-ragu)
+        function toggleFlag() {
+            const questionObj = questions[state.currentQuestionIndex];
+            const isFlagged = state.flagged[questionObj.id] === true;
+            
+            if (isFlagged) {
+                delete state.flagged[questionObj.id];
+            } else {
+                state.flagged[questionObj.id] = true;
+            }
+            
+            saveState();
+            loadQuestion(state.currentQuestionIndex);
+            updateNavigationGridButton(state.currentQuestionIndex);
+        }
+
+        // Navigation controls logic
+        function prevQuestion() {
+            if (state.currentQuestionIndex > 0) {
+                loadQuestion(state.currentQuestionIndex - 1);
+            }
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestionIndex < questions.length - 1) {
+                loadQuestion(state.currentQuestionIndex + 1);
+            } else {
+                // If it's the last question, open submission dialog
+                confirmSubmitExam();
+            }
+        }
+
+        // Build navigation sidebar grid structure once
+        function buildNavigationGrid() {
+            const grid = document.getElementById('nav-buttons-grid');
+            grid.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const btn = document.createElement('button');
+                btn.id = `nav-btn-${idx}`;
+                btn.className = getNavigationButtonStyles(idx);
+                btn.innerText = idx + 1;
+                btn.setAttribute('onclick', `jumpToQuestion(${idx})`);
+                grid.appendChild(btn);
+            });
+        }
+
+        // Helper to evaluate dynamic button styling
+        function getNavigationButtonStyles(idx) {
+            const qId = questions[idx].id;
+            const isAnswered = state.answers[qId] !== undefined;
+            const isFlagged = state.flagged[qId] === true;
+            const isActive = state.currentQuestionIndex === idx;
+
+            const baseStyle = "w-10 h-10 rounded-xl font-bold text-xs transition-all flex items-center justify-center border-2";
+
+            if (isActive) {
+                return `${baseStyle} bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-100 ring-4 ring-brand-100`;
+            } else if (isFlagged) {
+                return `${baseStyle} bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-100`;
+            } else if (isAnswered) {
+                return `${baseStyle} bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-50`;
+            } else {
+                return `${baseStyle} bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-100`;
+            }
+        }
+
+        // Live updater for a single specific navigation button
+        function updateNavigationGridButton(idx) {
+            const btn = document.getElementById(`nav-btn-${idx}`);
+            if (btn) {
+                btn.className = getNavigationButtonStyles(idx);
+            }
+        }
+
+        // Trigger updates across active and old coordinates
+        function updateActiveNavigationHighlight(newIdx) {
+            questions.forEach((q, idx) => {
+                updateNavigationGridButton(idx);
+            });
+        }
+
+        function jumpToQuestion(idx) {
+            loadQuestion(idx);
+        }
+
+        // Handle Submission Custom Dialog (NO DEFAULT CONFIRM!)
+        function confirmSubmitExam() {
+            // Count total unanswered questions to give warning message
+            let unansweredCount = 0;
+            questions.forEach(q => {
+                if (state.answers[q.id] === undefined) {
+                    unansweredCount++;
+                }
+            });
+
+            const warningBox = document.getElementById('modal-unanswered-warning');
+            const warningCountSpan = document.getElementById('modal-unanswered-count');
+
+            if (unansweredCount > 0) {
+                warningBox.classList.remove('hidden');
+                warningCountSpan.innerText = unansweredCount;
+            } else {
+                warningBox.classList.add('hidden');
+            }
+
+            // Reveal modal overlay
+            const modal = document.getElementById('custom-modal');
+            const modalContent = document.getElementById('modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            const modalContent = document.getElementById('modal-content');
+            
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Finish and Submit Exam state loader
+        function submitExam() {
+            closeModal();
+            clearInterval(timerInterval);
+
+            state.submitted = true;
+            saveState();
+
+            // Screen switch
+            showScreen('screen-result');
+            document.getElementById('header-timer-container').classList.add('hidden');
+            document.getElementById('header-timer-container').classList.remove('flex');
+
+            renderResults();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Calculate scores and render breakdown review boards
+        let currentFilterMode = 'all';
+
+        function renderResults() {
+            // Set basic student info display
+            document.getElementById('res-display-nama').innerText = state.userInfo.nama;
+            document.getElementById('res-display-nim').innerText = state.userInfo.nim;
+            document.getElementById('res-display-kelas').innerText = state.userInfo.kelas;
+
+            // Score Calculations
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let unansweredCount = 0;
+
+            questions.forEach(q => {
+                const userAns = state.answers[q.id];
+                if (userAns === undefined) {
+                    unansweredCount++;
+                } else if (userAns === q.correct) {
+                    correctCount++;
+                } else {
+                    incorrectCount++;
+                }
+            });
+
+            const finalScore = Math.round((correctCount / questions.length) * 100);
+            
+            // Pass/Fail boundaries check
+            const passLimit = 70;
+            if (finalScore >= passLimit) {
+                document.getElementById('result-badge-pass').classList.remove('hidden');
+                document.getElementById('result-badge-fail').classList.add('hidden');
+            } else {
+                document.getElementById('result-badge-fail').classList.remove('hidden');
+                document.getElementById('result-badge-pass').classList.add('hidden');
+            }
+
+            // Scoreboard values injection
+            document.getElementById('res-display-score').innerText = finalScore;
+            document.getElementById('res-stat-correct').innerText = correctCount;
+            document.getElementById('res-stat-incorrect').innerText = incorrectCount;
+            document.getElementById('res-stat-unanswered').innerText = unansweredCount;
+            
+            const accuracy = Math.round((correctCount / (questions.length - unansweredCount || 1)) * 100);
+            document.getElementById('res-stat-accuracy').innerText = `${unansweredCount === questions.length ? 0 : accuracy}%`;
+
+            // Sidebar review filters indicator updater
+            document.getElementById('rev-filter-count-correct').innerText = correctCount;
+            document.getElementById('rev-filter-count-incorrect').innerText = incorrectCount;
+            document.getElementById('rev-filter-count-unanswered').innerText = unansweredCount;
+
+            // Render review cards list
+            renderReviewList();
+        }
+
+        // Render list based on filtering controls
+        function filterReview(mode) {
+            currentFilterMode = mode;
+            
+            // Update filter buttons styling
+            const btnAll = document.getElementById('btn-filter-all');
+            const btnCorrect = document.getElementById('btn-filter-correct');
+            const btnIncorrect = document.getElementById('btn-filter-incorrect');
+            const btnUnanswered = document.getElementById('btn-filter-unanswered');
+
+            const inactiveClass = "px-4 py-2 rounded-full font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all";
+            const activeClass = "px-4 py-2 rounded-full font-bold bg-slate-900 text-white transition-all";
+
+            btnAll.className = mode === 'all' ? activeClass : inactiveClass;
+            btnCorrect.className = mode === 'correct' ? activeClass : inactiveClass;
+            btnIncorrect.className = mode === 'incorrect' ? activeClass : inactiveClass;
+            btnUnanswered.className = mode === 'unanswered' ? activeClass : inactiveClass;
+
+            renderReviewList();
+        }
+
+        // Main review lists builder HTML structures
+        function renderReviewList() {
+            const container = document.getElementById('review-list-container');
+            container.innerHTML = '';
+
+            const alphabet = ['A', 'B', 'C', 'D'];
+
+            questions.forEach((q, idx) => {
+                const userAns = state.answers[q.id];
+                const isCorrect = userAns === q.correct;
+                const isUnanswered = userAns === undefined;
+
+                // Validate matching filter mode
+                if (currentFilterMode === 'correct' && (!isCorrect || isUnanswered)) return;
+                if (currentFilterMode === 'incorrect' && (isCorrect || isUnanswered)) return;
+                if (currentFilterMode === 'unanswered' && !isUnanswered) return;
+
+                const card = document.createElement('div');
+                card.className = `p-5 sm:p-6 rounded-2xl border-2 transition-all ${
+                    isUnanswered 
+                    ? 'border-slate-200 bg-slate-50/50' 
+                    : isCorrect 
+                        ? 'border-emerald-200 bg-emerald-50/10' 
+                        : 'border-rose-200 bg-rose-50/10'
+                }`;
+
+                // Header status row within review card
+                const header = document.createElement('div');
+                header.className = "flex items-center justify-between pb-3 border-b border-dashed border-slate-200 mb-4 text-xs font-semibold";
+
+                const noStr = document.createElement('span');
+                noStr.className = "text-slate-500";
+                noStr.innerText = `Pertanyaan Nomor ${idx + 1}`;
+
+                const badge = document.createElement('span');
+                if (isUnanswered) {
+                    badge.className = "px-3 py-1 bg-slate-100 text-slate-600 rounded-full";
+                    badge.innerText = "Tidak Dijawab";
+                } else if (isCorrect) {
+                    badge.className = "px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full flex items-center gap-1";
+                    badge.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Benar`;
+                } else {
+                    badge.className = "px-3 py-1 bg-rose-100 text-rose-800 rounded-full flex items-center gap-1";
+                    badge.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Salah`;
+                }
+
+                header.appendChild(noStr);
+                header.appendChild(badge);
+                card.appendChild(header);
+
+                // Question Title inside review card
+                const qText = document.createElement('h4');
+                qText.className = "text-sm sm:text-base font-bold text-slate-900 mb-4 leading-relaxed";
+                qText.innerHTML = q.question;
+                card.appendChild(qText);
+
+                // Option outputs with verification statuses
+                const optionsList = document.createElement('div');
+                optionsList.className = "space-y-2.5";
+
+                q.options.forEach((optText, optIdx) => {
+                    const optionRow = document.createElement('div');
+                    
+                    // Style option statuses: True Correct, User Incorrect, default neutral
+                    const wasSelectedByUser = userAns === optIdx;
+                    const isTrueCorrect = q.correct === optIdx;
+
+                    let borderStyle = "border-slate-100 bg-white text-slate-700";
+                    let badgeStyle = "bg-slate-100 text-slate-500";
+
+                    if (isTrueCorrect) {
+                        borderStyle = "border-emerald-300 bg-emerald-50 text-emerald-900";
+                        badgeStyle = "bg-emerald-600 text-white";
+                    } else if (wasSelectedByUser && !isCorrect) {
+                        borderStyle = "border-rose-300 bg-rose-50 text-rose-900";
+                        badgeStyle = "bg-rose-600 text-white";
+                    }
+
+                    optionRow.className = `flex items-center gap-3 p-3 rounded-xl border text-xs sm:text-sm font-semibold ${borderStyle}`;
+                    
+                    const optBadge = document.createElement('span');
+                    optBadge.className = `w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${badgeStyle}`;
+                    optBadge.innerText = alphabet[optIdx];
+
+                    const optLabel = document.createElement('span');
+                    optLabel.className = "flex-grow leading-relaxed";
+                    optLabel.innerHTML = optText;
+
+                    optionRow.appendChild(optBadge);
+                    optionRow.appendChild(optLabel);
+
+                    // Add visual indicators inside rows
+                    if (isTrueCorrect) {
+                        const correctIndicator = document.createElement('span');
+                        correctIndicator.className = "text-[10px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-md font-bold uppercase shrink-0";
+                        correctIndicator.innerText = "Kunci Jawaban";
+                        optionRow.appendChild(correctIndicator);
+                    } else if (wasSelectedByUser) {
+                        const incorrectIndicator = document.createElement('span');
+                        incorrectIndicator.className = "text-[10px] text-rose-700 bg-rose-100 px-2 py-1 rounded-md font-bold uppercase shrink-0";
+                        incorrectIndicator.innerText = "Pilihan Anda";
+                        optionRow.appendChild(incorrectIndicator);
+                    }
+
+                    optionsList.appendChild(optionRow);
+                });
+
+                card.appendChild(optionsList);
+                container.appendChild(card);
+            });
+
+            if (container.children.length === 0) {
+                const emptyCard = document.createElement('div');
+                emptyCard.className = "text-center py-12 border border-slate-100 rounded-3xl text-slate-400 font-medium text-sm";
+                emptyCard.innerText = "Tidak ada soal dalam kategori filter ini.";
+                container.appendChild(emptyCard);
+            }
+        }
+
+        // Reset state for new examination attempt
+        function resetExamState() {
+            if (confirm("Apakah Anda yakin ingin menghapus riwayat pengerjaan dan memulai ujian baru?")) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                state = {
+                    userInfo: { nama: '', nim: '', kelas: '' },
+                    started: false,
+                    submitted: false,
+                    answers: {},
+                    flagged: {},
+                    timeLeft: 3600,
+                    currentQuestionIndex: 0
+                };
+                
+                // Clear input boxes from screen forms
+                document.getElementById('user-nim').value = '';
+                document.getElementById('user-nama').value = '';
+                document.getElementById('user-kelas').value = '';
+
+                showScreen('screen-auth');
+                showToast("Riwayat ujian berhasil di-reset.");
+            }
+        }
+    </script>
+</body>
+</html>
